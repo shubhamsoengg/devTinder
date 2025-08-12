@@ -2,16 +2,12 @@ const express = require("express");
 
 const app = express();
 
-app.use("/", (req, res) => {
-	res.send("Home!");
+app.get("/user", (req, res) => {
+	res.send({ firstName: "John", lastName: "Doe" });
 });
 
-app.use("/hello", (req, res) => {
-	res.send("Hello, World!");
-});
-
-app.use("/new", (req, res) => {
-	res.send("New!");
+app.post("/user", (req, res) => {
+	res.send("User created!");
 });
 
 app.listen(3000, () => {
