@@ -16,18 +16,48 @@ connectDB()
 		console.error("Database connection failed:", err);
 	});
 
+app.use(express.json()); // Middleware to parse JSON request bodies
+
 app.post("/signup", async (req, res) => {
-	const user = new User({
-		firstName: "test",
-		lastName: "test",
-		email: "test@kohli.com",
-		password: "password123",
-		age: 25,
-	});
+	// Assuming req.body contains user data
+
+	const user = new User(req.body);
+	await user.save();
 	try {
 		await user.save();
 		res.status(201).send("User created successfully");
 	} catch (error) {
 		res.status(400).send("Error creating user: " + error.message);
 	}
+});
+
+app.get("/user", async (req, res) => {
+	const email = req.body.email;
+	try {
+		const user = await User.find({ email });
+		if (user.length === 0) {
+			return res.status(404).send("User not found");
+		}
+		res.status(200).send(user);
+	} catch (error) {
+		res.status(400).send("Error fetching user: " + error.message);
+	}
+});
+
+app.get("/feed", async (req, res) => {
+	const userFeed = await User.find({});
+	try {
+		if (userFeed.length === 0) {
+			return res.status(404).send("No users found");
+		}
+		res.status(200).send(userFeed);
+	} catch (error) {
+		res.status(400).send("Error fetching feed: " + error.message);
+	}
+});
+
+app.patch("/user", async (req, res) => {
+	const userId = req.body.userId;
+	const user = await User.findByIdAndUpdate(userId, req.body);
+	res.status(200).send("User updated successfully");
 });
