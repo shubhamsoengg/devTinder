@@ -22,12 +22,11 @@ app.post("/signup", async (req, res) => {
 	// Assuming req.body contains user data
 
 	const user = new User(req.body);
-	await user.save();
 	try {
 		await user.save();
 		res.status(201).send("User created successfully");
 	} catch (error) {
-		res.status(400).send("Error creating user: " + error.message);
+		res.send("Error creating user: " + error.message);
 	}
 });
 
@@ -58,6 +57,9 @@ app.get("/feed", async (req, res) => {
 
 app.patch("/user", async (req, res) => {
 	const userId = req.body.userId;
-	const user = await User.findByIdAndUpdate(userId, req.body);
+	const user = await User.findByIdAndUpdate(userId, req.body, {
+		returnDocument: "after",
+		runValidators: true,
+	});
 	res.status(200).send("User updated successfully");
 });
