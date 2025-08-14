@@ -5,9 +5,25 @@ const userSchema = new mongoose.Schema(
 		firstName: {
 			type: String,
 			required: true,
+			trim: true, // Remove leading and trailing whitespace
+			minlength: 2, // Minimum length for first name
+			maxlength: 50, // Maximum length for first name
+			validate(value) {
+				if (!/^[a-zA-Z]+$/.test(value)) {
+					throw new Error("First name must contain only letters");
+				}
+			},
 		},
 		lastName: {
 			type: String,
+			trim: true, // Remove leading and trailing whitespace
+			minlength: 2, // Minimum length for last name
+			maxlength: 50, // Maximum length for last name
+			validate(value) {
+				if (!/^[a-zA-Z]+$/.test(value)) {
+					throw new Error("Last name must contain only letters");
+				}
+			},
 		},
 		email: {
 			type: String,
@@ -15,9 +31,29 @@ const userSchema = new mongoose.Schema(
 			unique: true,
 			lowercase: true, // Ensure email is stored in lowercase
 			trim: true, // Remove leading and trailing whitespace
+			validate(value) {
+				if (!/\S+@\S+\.\S+/.test(value)) {
+					throw new Error("Email is invalid");
+				}
+			},
 		},
 		password: {
 			type: String,
+			required: true,
+			minlength: 6, // Minimum length for password
+			validate(value) {
+				if (
+					value.length < 6 ||
+					value.length > 128 ||
+					!/[A-Z]/.test(value) ||
+					!/[a-z]/.test(value) ||
+					!/[0-9]/.test(value)
+				) {
+					throw new Error(
+						"Password must be 6-128 characters and contain upper case, lower case, and a number"
+					);
+				}
+			},
 		},
 		age: {
 			type: Number,
@@ -29,6 +65,7 @@ const userSchema = new mongoose.Schema(
 		},
 		gender: {
 			type: String,
+			enum: ["Male", "Female", "Other"],
 		},
 		profilePicture: {
 			type: String,
@@ -36,6 +73,14 @@ const userSchema = new mongoose.Schema(
 		},
 		skills: {
 			type: [String],
+			set: (skills) => Array.from(new Set(skills)), // Remove duplicates
+			validate(value) {
+				if (value.length < 1 || value.length > 10) {
+					throw new Error(
+						"Skills must contain between 1 and 10 items"
+					);
+				}
+			},
 		},
 	},
 	{ timestamps: true }

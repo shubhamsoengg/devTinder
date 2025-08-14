@@ -55,11 +55,29 @@ app.get("/feed", async (req, res) => {
 	}
 });
 
-app.patch("/user", async (req, res) => {
-	const userId = req.body.userId;
-	const user = await User.findByIdAndUpdate(userId, req.body, {
-		returnDocument: "after",
-		runValidators: true,
-	});
-	res.status(200).send("User updated successfully");
+app.patch("/user/:userId", async (req, res) => {
+	const ALLOWED_UPDATES = [
+		"firstName",
+		"lastName",
+		"password",
+		"age",
+		"skills",
+		"gender",
+		"ProfilePicture",
+	];
+	const userId = req.params?.userId;
+	try {
+		Object.keys(req.body).forEach((field) => {
+			if (!ALLOWED_UPDATES.includes(field)) {
+				throw new Error(`Invalid update: ${field}`);
+			}
+		});
+		const user = await User.findByIdAndUpdate(userId, req.body, {
+			returnDocument: "after",
+			runValidators: true,
+		});
+		res.status(200).send("User updated successfully");
+	} catch (error) {
+		res.send("Error updating user: " + error.message);
+	}
 });
