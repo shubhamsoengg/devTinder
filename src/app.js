@@ -1,7 +1,9 @@
 const express = require("express");
 const connectDB = require("./config/database");
+const bcrypt = require("bcrypt");
 
 const User = require("./models/user");
+const { validateSignUpData } = require("./utils/validation");
 
 const app = express();
 
@@ -19,14 +21,40 @@ connectDB()
 app.use(express.json()); // Middleware to parse JSON request bodies
 
 app.post("/signup", async (req, res) => {
-	// Assuming req.body contains user data
-
-	const user = new User(req.body);
 	try {
+		const { firstName, lastName, email, password } = req.body;
+		// 1. Validate request body
+		validateSignUpData(req);
+
+		// 2. Encrypt password
+		const passwordHash = await bcrypt.hash(password, 10);
+		const user = new User({
+			firstName,
+			lastName,
+			email,
+			password: passwordHash,
+		});
 		await user.save();
 		res.status(201).send("User created successfully");
 	} catch (error) {
 		res.send("Error creating user: " + error.message);
+	}
+});
+
+app.post("/login", async (req, res) => {
+	try {
+		const { email, password } = req.body;
+		const user = await User.findOne({ email });
+		if (!user) {
+			return res.status(404).send("User not found");
+		}
+		const isPasswordValid = await bcrypt.compare(password, user.password);
+		if (!isPasswordValid) {
+			return res.status(401).send("Invalid password");
+		}
+		res.status(200).send("Login successful");
+	} catch (error) {
+		res.status(400).send("Error logging in: " + error.message);
 	}
 });
 

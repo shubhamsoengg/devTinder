@@ -73,9 +73,13 @@ const userSchema = new mongoose.Schema(
 		},
 		skills: {
 			type: [String],
+			default: [],
 			set: (skills) => Array.from(new Set(skills)), // Remove duplicates
 			validate(value) {
-				if (value.length < 1 || value.length > 10) {
+				if (
+					value.length > 0 &&
+					(value.length < 1 || value.length > 10)
+				) {
 					throw new Error(
 						"Skills must contain between 1 and 10 items"
 					);
