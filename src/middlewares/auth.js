@@ -1,21 +1,25 @@
-const adminAuthentication = (req, res, next) => {
-	let token = "123abc"; // Example token
-	let authorized = token === "123abc"; // Check if token matches
-	if (!authorized) {
-		return res.status(403).send("Forbidden: Invalid token");
+const jwt = require("jsonwebtoken");
+const User = require("../models/user");
+
+const userAuthentication = async (req, res, next) => {
+	try {
+		const { token } = req.cookies;
+		if (!token) {
+			return res.status(401).send("Unauthorized: No token provided");
+		}
+		const decoded = jwt.verify(token, "my_test_secret");
+		const { _id } = decoded;
+		const user = await User.findById(_id);
+		if (!user) {
+			return res.status(404).send("User not found");
+		}
+		req.user = user;
+		next();
+	} catch (error) {
+		return res
+			.status(401)
+			.send("Unauthorized: Invalid token" + error.message);
 	}
-	console.log("Admin Authentication Successful!");
-	next();
 };
 
-const userAuthentication = (req, res, next) => {
-	let token = "123abc"; // Example token
-	let authorized = token === "123abc"; // Check if token matches
-	if (!authorized) {
-		return res.status(403).send("Forbidden: Invalid token");
-	}
-	console.log("User Authentication Successful!");
-	next();
-};
-
-module.exports = { adminAuthentication, userAuthentication };
+module.exports = { userAuthentication };

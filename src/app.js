@@ -6,6 +6,7 @@ const jwt = require("jsonwebtoken");
 
 const User = require("./models/user");
 const { validateSignUpData } = require("./utils/validation");
+const { userAuthentication } = require("./middlewares/auth");
 
 const app = express();
 
@@ -55,7 +56,9 @@ app.post("/login", async (req, res) => {
 		if (!isPasswordValid) {
 			return res.status(401).send("Invalid password");
 		}
-		const jwtToken = jwt.sign({ _id: user._id }, "my_test_secret");
+		const jwtToken = jwt.sign({ _id: user._id }, "my_test_secret", {
+			expiresIn: "1d",
+		});
 		res.cookie("token", jwtToken);
 		res.status(200).send("Login successful");
 	} catch (error) {
@@ -63,75 +66,21 @@ app.post("/login", async (req, res) => {
 	}
 });
 
-app.get("/user", async (req, res) => {
-	const email = req.body.email;
+app.get("/profile", userAuthentication, async (req, res) => {
 	try {
-		const user = await User.find({ email });
-		if (user.length === 0) {
-			return res.status(404).send("User not found");
-		}
+		const user = req.user; // User is set by the userAuthentication middleware
 		res.status(200).send(user);
-	} catch (error) {
-		res.status(400).send("Error fetching user: " + error.message);
-	}
-});
-
-app.get("/profile", async (req, res) => {
-	try {
-		const { token } = req.cookies;
-		if (!token) {
-			return res.status(401).send("Unauthorized: No token provided");
-		}
-		const decoded = jwt.verify(token, "my_test_secret");
-		console.log(decoded);
-		const user = await User.findById(decoded._id);
-		if (!user) {
-			return res.status(404).send("User not found");
-		}
-		res.status(200).send(user);
-		console.log("Cookie read successfully");
-
-		res.send(user);
 	} catch (error) {
 		res.status(400).send("Error fetching profile: " + error.message);
 	}
 });
 
-app.get("/feed", async (req, res) => {
-	const userFeed = await User.find({});
+app.post("/sendConnectionRequest", userAuthentication, async (req, res) => {
 	try {
-		if (userFeed.length === 0) {
-			return res.status(404).send("No users found");
-		}
-		res.status(200).send(userFeed);
+		res.send("Connection request sent successfully");
 	} catch (error) {
-		res.status(400).send("Error fetching feed: " + error.message);
-	}
-});
-
-app.patch("/user/:userId", async (req, res) => {
-	const ALLOWED_UPDATES = [
-		"firstName",
-		"lastName",
-		"password",
-		"age",
-		"skills",
-		"gender",
-		"ProfilePicture",
-	];
-	const userId = req.params?.userId;
-	try {
-		Object.keys(req.body).forEach((field) => {
-			if (!ALLOWED_UPDATES.includes(field)) {
-				throw new Error(`Invalid update: ${field}`);
-			}
-		});
-		const user = await User.findByIdAndUpdate(userId, req.body, {
-			returnDocument: "after",
-			runValidators: true,
-		});
-		res.status(200).send("User updated successfully");
-	} catch (error) {
-		res.send("Error updating user: " + error.message);
+		res.status(400).send(
+			"Error sending connection request: " + error.message
+		);
 	}
 });
