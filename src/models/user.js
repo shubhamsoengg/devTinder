@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-
+const validator = require("validator");
 const userSchema = new mongoose.Schema(
 	{
 		firstName: {
@@ -32,7 +32,7 @@ const userSchema = new mongoose.Schema(
 			lowercase: true, // Ensure email is stored in lowercase
 			trim: true, // Remove leading and trailing whitespace
 			validate(value) {
-				if (!/\S+@\S+\.\S+/.test(value)) {
+				if (validator.isEmail(value) === false) {
 					throw new Error("Email is invalid");
 				}
 			},
