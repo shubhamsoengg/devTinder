@@ -1,5 +1,8 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+
 const userSchema = new mongoose.Schema(
 	{
 		firstName: {
@@ -88,6 +91,24 @@ const userSchema = new mongoose.Schema(
 		},
 	},
 	{ timestamps: true }
-); // Automatically manage createdAt and updatedAt fields
+);
+
+userSchema.methods.getJWT = async function () {
+	const user = this;
+	const jwtToken = jwt.sign({ _id: user._id }, "my_test_secret", {
+		expiresIn: "1d",
+	});
+	return jwtToken;
+};
+
+userSchema.methods.validateUserPassword = async function (userInputPassword) {
+	const user = this;
+	const passwordHash = user.password;
+	const isPasswordValid = await bcrypt.compare(
+		userInputPassword,
+		passwordHash
+	);
+	return isPasswordValid;
+};
 
 module.exports = mongoose.model("User", userSchema);

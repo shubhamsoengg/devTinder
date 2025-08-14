@@ -52,14 +52,12 @@ app.post("/login", async (req, res) => {
 		if (!user) {
 			return res.status(404).send("User not found");
 		}
-		const isPasswordValid = await bcrypt.compare(password, user.password);
+		const isPasswordValid = await user.validateUserPassword(password);
 		if (!isPasswordValid) {
 			return res.status(401).send("Invalid password");
 		}
-		const jwtToken = jwt.sign({ _id: user._id }, "my_test_secret", {
-			expiresIn: "1d",
-		});
-		res.cookie("token", jwtToken);
+		const token = await user.getJWT();
+		res.cookie("token", token);
 		res.status(200).send("Login successful");
 	} catch (error) {
 		res.status(400).send("Error logging in: " + error.message);
