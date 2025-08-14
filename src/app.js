@@ -1,6 +1,8 @@
 const express = require("express");
 const connectDB = require("./config/database");
 const bcrypt = require("bcrypt");
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
 
 const User = require("./models/user");
 const { validateSignUpData } = require("./utils/validation");
@@ -19,6 +21,7 @@ connectDB()
 	});
 
 app.use(express.json()); // Middleware to parse JSON request bodies
+app.use(cookieParser()); // Middleware to parse cookies
 
 app.post("/signup", async (req, res) => {
 	try {
@@ -52,6 +55,8 @@ app.post("/login", async (req, res) => {
 		if (!isPasswordValid) {
 			return res.status(401).send("Invalid password");
 		}
+		const jwtToken = jwt.sign({ _id: user._id }, "my_test_secret");
+		res.cookie("token", jwtToken);
 		res.status(200).send("Login successful");
 	} catch (error) {
 		res.status(400).send("Error logging in: " + error.message);
@@ -68,6 +73,27 @@ app.get("/user", async (req, res) => {
 		res.status(200).send(user);
 	} catch (error) {
 		res.status(400).send("Error fetching user: " + error.message);
+	}
+});
+
+app.get("/profile", async (req, res) => {
+	try {
+		const { token } = req.cookies;
+		if (!token) {
+			return res.status(401).send("Unauthorized: No token provided");
+		}
+		const decoded = jwt.verify(token, "my_test_secret");
+		console.log(decoded);
+		const user = await User.findById(decoded._id);
+		if (!user) {
+			return res.status(404).send("User not found");
+		}
+		res.status(200).send(user);
+		console.log("Cookie read successfully");
+
+		res.send(user);
+	} catch (error) {
+		res.status(400).send("Error fetching profile: " + error.message);
 	}
 });
 
