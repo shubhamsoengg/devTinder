@@ -12,7 +12,41 @@ const validateSignUpData = (req) => {
 		throw new Error("Email is invalid");
 	}
 	if (!validator.isStrongPassword(password)) {
-		throw new Error("Pasword must be a strong password.");
+		throw new Error("Password must be a strong password.");
 	}
 };
-module.exports = { validateSignUpData };
+
+const validateProfileEditData = (req) => {
+	try {
+		const allowedFields = ["firstName", "lastName", "age", "about"];
+		Object.keys(req.body).forEach((field) => {
+			if (!allowedFields.includes(field)) {
+				throw new Error(`Invalid field: ${key}`);
+			}
+		});
+	} catch (error) {
+		throw new Error("Profile edit validation failed: " + error.message);
+	}
+};
+
+const validateUpdatePasswordData = async (req) => {
+	const { currentPassword, newPassword, confirmNewPassword } = req.body;
+	if (!currentPassword || !newPassword || !confirmNewPassword) {
+		throw new Error("All password fields are required");
+	}
+	if (!(await req.user.validateUserPassword(currentPassword))) {
+		throw new Error("Current user password is incorrect");
+	}
+	if (newPassword !== confirmNewPassword) {
+		throw new Error("New password and confirm password do not match");
+	}
+	if (!validator.isStrongPassword(newPassword)) {
+		throw new Error("New password must be a strong password.");
+	}
+};
+
+module.exports = {
+	validateSignUpData,
+	validateProfileEditData,
+	validateUpdatePasswordData,
+};

@@ -74,6 +74,11 @@ const userSchema = new mongoose.Schema(
 			type: String,
 			default: "https://example.com/default-profile-picture.png", // Placeholder URL
 		},
+		about: {
+			type: String,
+			trim: true, // Remove leading and trailing whitespace
+			maxlength: 500, // Maximum length for about section
+		},
 		skills: {
 			type: [String],
 			default: [],
