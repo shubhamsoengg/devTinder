@@ -56,13 +56,13 @@ userRouter.get("/user/connections", userAuthentication, async (req, res) => {
 });
 
 userRouter.get("/user/feed", userAuthentication, async (req, res) => {
-	/* Steps:
-        1. We need all users except the current user
-        2. We need to exclude users who are already connected with the current user
-        3. We need to exclude users who have sent a connection request to the current user
-        4. We need to exclude users who have received a connection request from the current user
-        5. We need to exclude users who have ignored/rejected the current user
-    */
+	const limit = parseInt(req.query.limit) || 10;
+	if (limit < 1 || limit > 100) {
+		return res.status(400).send("Limit must be between 1 and 100");
+	}
+	const page = parseInt(req.query.page) || 1;
+	const skipCount = (page - 1) * limit;
+
 	try {
 		const userId = req.user._id;
 		const connections = await ConnectionRequest.find({
@@ -77,7 +77,10 @@ userRouter.get("/user/feed", userAuthentication, async (req, res) => {
 
 		const feedUserData = await User.find({
 			_id: { $nin: [userId, ...Array.from(connectedUserIdSet)] },
-		}).select(USER_SAFE_FIELDS);
+		})
+			.select(USER_SAFE_FIELDS)
+			.skip(skipCount)
+			.limit(limit);
 
 		res.json({
 			message: `Hi, ${req.user.firstName}, You have ${feedUserData.length} users in your feed`,
