@@ -31,6 +31,7 @@ const userSchema = new mongoose.Schema(
 		email: {
 			type: String,
 			required: true,
+			index: true, // Create an index for faster lookups
 			unique: true,
 			lowercase: true, // Ensure email is stored in lowercase
 			trim: true, // Remove leading and trailing whitespace

@@ -22,7 +22,7 @@
 ## userRouter
 
 -   GET /user/connections
--   GET /user/requests/recieved
+-   GET /user/requests/received
 -   GET /user/feed/ - gets a list of users in your feed.
 
 -   Statuses: ignore, interested, accepted, rejected

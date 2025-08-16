@@ -7,7 +7,6 @@ const authRouter = express.Router();
 
 authRouter.post("/signup", async (req, res) => {
 	try {
-		console.log("inside signup route");
 		const { firstName, lastName, email, password } = req.body;
 		// 1. Validate request body
 		validateSignUpData(req);
