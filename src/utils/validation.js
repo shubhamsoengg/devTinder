@@ -18,7 +18,13 @@ const validateSignUpData = (req) => {
 
 const validateProfileEditData = (req) => {
 	try {
-		const allowedFields = ["firstName", "lastName", "age", "about"];
+		const allowedFields = [
+			"firstName",
+			"lastName",
+			"age",
+			"about",
+			"profilePicture",
+		];
 		Object.keys(req.body).forEach((field) => {
 			if (!allowedFields.includes(field)) {
 				throw new Error(`Invalid field: ${key}`);
