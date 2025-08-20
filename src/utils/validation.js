@@ -21,8 +21,10 @@ const validateProfileEditData = (req) => {
 		const allowedFields = [
 			"firstName",
 			"lastName",
+			"gender",
 			"age",
 			"about",
+			"skills",
 			"profilePicture",
 		];
 		Object.keys(req.body).forEach((field) => {

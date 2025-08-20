@@ -73,7 +73,7 @@ const userSchema = new mongoose.Schema(
 		},
 		profilePicture: {
 			type: String,
-			default: "https://example.com/default-profile-picture.png", // Placeholder URL
+			default: "https://api.dicebear.com/6.x/bottts/svg?seed=developer", // Placeholder URL
 		},
 		about: {
 			type: String,
