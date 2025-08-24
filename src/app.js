@@ -3,6 +3,8 @@ const connectDB = require("./config/database");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const dotenv = require("dotenv");
+require("./utils/cronJob");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 dotenv.config();
 const app = express();

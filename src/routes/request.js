@@ -114,7 +114,7 @@ requestRouter.post(
 			connectionRequest.status = status;
 			const updatedRequest = await connectionRequest.save();
 
-			const emailResponse = await sendEmail();
+			const emailResponse = await sendEmail.run();
 			console.log("Email sent response: ", emailResponse);
 
 			return sendResponse(
