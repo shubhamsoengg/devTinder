@@ -2,6 +2,7 @@ const express = require("express");
 const { validateSignUpData } = require("../utils/validation");
 const bcrypt = require("bcrypt");
 const User = require("../models/user");
+const sendResponse = require("../utils/sendResponse");
 
 const authRouter = express.Router();
 
@@ -22,12 +23,17 @@ authRouter.post("/signup", async (req, res) => {
 		const savedUser = await user.save();
 		const token = await savedUser.getJWT();
 		res.cookie("token", token);
-		res.status(201).json({
-			message: "User signup successful!",
-			data: savedUser,
-		});
+
+		sendResponse(res, 201, true, savedUser, "User signup successful!");
 	} catch (error) {
-		res.send("Error creating user: " + error.message);
+		sendResponse(
+			res,
+			400,
+			false,
+			null,
+			"Error creating user",
+			error.message
+		);
 	}
 });
 
@@ -36,17 +42,23 @@ authRouter.post("/login", async (req, res) => {
 		const { email, password } = req.body;
 		const user = await User.findOne({ email });
 		if (!user) {
-			return res.status(404).send("User not found");
+			// return res.status(404).send("User not found");
+			return sendResponse(res, 401, false, null, "User not found", [
+				{ field: "email", message: "Invalid email" },
+			]);
 		}
 		const isPasswordValid = await user.validateUserPassword(password);
 		if (!isPasswordValid) {
-			return res.status(401).send("Invalid password");
+			return sendResponse(res, 401, false, null, "Incorrect password", [
+				{ field: "password", message: "Wrong password" },
+			]);
 		}
 		const token = await user.getJWT();
 		res.cookie("token", token);
-		res.status(200).send(user);
+		// res.status(200).send(user);
+		sendResponse(res, 200, true, user, "Login successful!");
 	} catch (error) {
-		res.status(400).send("Error logging in: " + error.message);
+		sendResponse(res, 400, false, null, "Login Error!", error.message);
 	}
 });
 

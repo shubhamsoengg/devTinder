@@ -19,13 +19,21 @@ userRouter.get(
 				status: "interested",
 			}).populate("fromUserId", USER_SAFE_FIELDS);
 
-			res.json({
-				message: `Hi, ${req.user.firstName}, You have received ${connectionRequests.length} connection requests `,
+			return sendResponse(
+				res,
+				200,
+				true,
 				connectionRequests,
-			});
+				`Hi, ${req.user.firstName}, you have received ${connectionRequests.length} connection request(s)`
+			);
 		} catch (error) {
-			res.status(400).send(
-				"Error fetching received requests: " + error.message
+			return sendResponse(
+				res,
+				400,
+				false,
+				null,
+				"Error fetching received requests",
+				[{ field: "requests", message: error.message }]
 			);
 		}
 	}
@@ -40,25 +48,42 @@ userRouter.get("/user/connections", userAuthentication, async (req, res) => {
 				{ toUserId: userId, status: "accepted" },
 			],
 		}).populate("fromUserId toUserId", USER_SAFE_FIELDS);
-		const formatedConnections = connections.map((connection) => {
+		const formattedConnections = connections.map((connection) => {
 			return connection.fromUserId._id.equals(userId)
 				? connection.toUserId
 				: connection.fromUserId;
 		});
 
-		res.json({
-			message: `${req.user.firstName}, You have ${connections.length} connections`,
-			formatedConnections,
-		});
+		return sendResponse(
+			res,
+			200,
+			true,
+			formattedConnections,
+			`${req.user.firstName}, you have ${connections.length} connection(s)`
+		);
 	} catch (error) {
-		res.status(400).send("Error fetching connections: " + error.message);
+		return sendResponse(
+			res,
+			400,
+			false,
+			null,
+			"Error fetching connections",
+			[{ field: "connections", message: error.message }]
+		);
 	}
 });
 
 userRouter.get("/user/feed", userAuthentication, async (req, res) => {
 	const limit = parseInt(req.query.limit) || 10;
 	if (limit < 1 || limit > 100) {
-		return res.status(400).send("Limit must be between 1 and 100");
+		return sendResponse(
+			res,
+			400,
+			false,
+			null,
+			"Limit must be between 1 and 100",
+			[{ field: "limit", message: "Invalid limit parameter" }]
+		);
 	}
 	const page = parseInt(req.query.page) || 1;
 	const skipCount = (page - 1) * limit;
@@ -82,12 +107,17 @@ userRouter.get("/user/feed", userAuthentication, async (req, res) => {
 			.skip(skipCount)
 			.limit(limit);
 
-		res.json({
-			message: `Hi, ${req.user.firstName}, You have ${feedUserData.length} users in your feed`,
-			feed: feedUserData,
-		});
+		return sendResponse(
+			res,
+			200,
+			true,
+			feedUserData,
+			`Hi, ${req.user.firstName}, you have ${feedUserData.length} user(s) in your feed`
+		);
 	} catch (error) {
-		res.status(400).send("Error fetching feed: " + error.message);
+		return sendResponse(res, 400, false, null, "Error fetching feed", [
+			{ field: "feed", message: error.message },
+		]);
 	}
 });
 

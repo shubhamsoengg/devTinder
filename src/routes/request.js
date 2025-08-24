@@ -2,7 +2,9 @@ const express = require("express");
 const { userAuthentication } = require("../middlewares/auth");
 const ConnectionRequest = require("../models/connectionRequest");
 const User = require("../models/user");
-const req = require("express/lib/request");
+const sendEmail = require("../utils/sendEmail");
+const sendResponse = require("../utils/sendResponse");
+
 const requestRouter = express.Router();
 
 requestRouter.post(
@@ -24,18 +26,26 @@ requestRouter.post(
 				],
 			});
 			if (existingConnectionRequest) {
-				return res
-					.status(400)
-					.send(
-						"Connection request already exists between these users"
-					);
+				return sendResponse(
+					res,
+					400,
+					false,
+					null,
+					"Connection request already exists between these users",
+					[{ field: "connection", message: "Duplicate request" }]
+				);
 			}
 
 			const checkToUser = await User.findById(toUserId);
 			if (!checkToUser) {
-				return res
-					.status(404)
-					.json({ message: "To user not found", status: "error" });
+				return sendResponse(
+					res,
+					404,
+					false,
+					null,
+					"To user not found",
+					[{ field: "toUserId", message: "User does not exist" }]
+				);
 			}
 
 			const connectionRequest = new ConnectionRequest({
@@ -45,16 +55,23 @@ requestRouter.post(
 			});
 			const connectionRequestData = await connectionRequest.save();
 
-			res.json({
-				message:
-					status === "interested"
-						? "Connection request sent successfully"
-						: "Connection request ignored",
-				connectionRequest: connectionRequestData,
-			});
+			return sendResponse(
+				res,
+				200,
+				true,
+				connectionRequestData,
+				status === "interested"
+					? "Connection request sent successfully"
+					: "Connection request ignored"
+			);
 		} catch (error) {
-			res.status(400).send(
-				"Error sending connection request: " + error.message
+			return sendResponse(
+				res,
+				400,
+				false,
+				null,
+				"Error sending connection request",
+				[{ field: "connection", message: error.message }]
 			);
 		}
 	}
@@ -78,21 +95,43 @@ requestRouter.post(
 			});
 
 			if (!connectionRequest) {
-				return res
-					.status(404)
-					.send("Connection request not found or already processed");
+				return sendResponse(
+					res,
+					404,
+					false,
+					null,
+					"Connection request not found or already processed",
+					[
+						{
+							field: "connection",
+							message: "Invalid or processed request",
+						},
+					]
+				);
 			}
 
 			// Update the status of the connection request
 			connectionRequest.status = status;
 			const updatedRequest = await connectionRequest.save();
-			res.json({
-				message: `Connection request ${status}`,
-				connectionRequest: updatedRequest,
-			});
+
+			const emailResponse = await sendEmail();
+			console.log("Email sent response: ", emailResponse);
+
+			return sendResponse(
+				res,
+				200,
+				true,
+				updatedRequest,
+				`Connection request ${status}`
+			);
 		} catch (error) {
-			res.status(400).send(
-				"Error reviewing connection request: " + error.message
+			return sendResponse(
+				res,
+				400,
+				false,
+				null,
+				"Error reviewing connection request",
+				[{ field: "connection", message: error.message }]
 			);
 		}
 	}

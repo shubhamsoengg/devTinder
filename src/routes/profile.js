@@ -1,5 +1,6 @@
 const express = require("express");
 const { userAuthentication } = require("../middlewares/auth");
+const sendResponse = require("../utils/sendResponse");
 const bcrypt = require("bcrypt");
 const {
 	validateProfileEditData,
@@ -11,9 +12,17 @@ const profileRouter = express.Router();
 profileRouter.get("/profile/view", userAuthentication, async (req, res) => {
 	try {
 		const user = req.user; // User is set by the userAuthentication middleware
-		res.status(200).send(user);
+		// res.status(200).send(user);
+		sendResponse(res, 200, true, user, "User profile fetched successfully");
 	} catch (error) {
-		res.status(400).send("Error fetching profile: " + error.message);
+		sendResponse(
+			res,
+			400,
+			false,
+			null,
+			"Error fetching profile",
+			error.message
+		);
 	}
 });
 
@@ -25,12 +34,17 @@ profileRouter.patch("/profile/edit", userAuthentication, async (req, res) => {
 			loggedInUser[key] = req.body[key]; // Update user fields with the request body
 		});
 		await loggedInUser.save();
-		res.status(200).json({
-			message: `${loggedInUser.firstName}, Your profile updated successfully!`,
-			data: loggedInUser,
-		});
+		return sendResponse(
+			res,
+			200,
+			true,
+			loggedInUser,
+			`${loggedInUser.firstName}, your profile was updated successfully!`
+		);
 	} catch (error) {
-		res.status(400).send("Error updating profile: " + error.message);
+		return sendResponse(res, 400, false, null, "Error updating profile", [
+			{ field: "profile", message: error.message },
+		]);
 	}
 });
 
@@ -46,11 +60,22 @@ profileRouter.patch(
 			const loggedInUser = req.user; // User is set by the userAuthentication middleware
 			loggedInUser.password = await bcrypt.hash(newPassword, 10); // Update the password
 			await loggedInUser.save();
-			res.status(200).send(
-				"Password updated successfully for " + loggedInUser.firstName
+			return sendResponse(
+				res,
+				200,
+				true,
+				null,
+				`Password updated successfully for ${loggedInUser.firstName}`
 			);
 		} catch (error) {
-			res.status(400).send("Error updating password: " + error.message);
+			return sendResponse(
+				res,
+				400,
+				false,
+				null,
+				"Error updating password",
+				[{ field: "password", message: error.message }]
+			);
 		}
 	}
 );
