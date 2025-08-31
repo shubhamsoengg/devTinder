@@ -15,6 +15,8 @@ requestRouter.post(
 			const { status, toUserId } = req.params;
 			const fromUserId = req.user._id;
 
+			const emailResponse = await sendEmail();
+			console.log(emailResponse);
 			if (!["interested", "ignored"].includes(status)) {
 				throw new Error("Invalid status for connection request");
 			}
@@ -114,7 +116,8 @@ requestRouter.post(
 			connectionRequest.status = status;
 			const updatedRequest = await connectionRequest.save();
 
-			const emailResponse = await sendEmail.run();
+			const emailResponse = await sendEmail();
+
 			console.log("Email sent response: ", emailResponse);
 
 			return sendResponse(

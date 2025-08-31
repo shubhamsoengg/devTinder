@@ -95,6 +95,13 @@ const userSchema = new mongoose.Schema(
 				}
 			},
 		},
+		premiumUser: {
+			type: Boolean,
+			default: false,
+		},
+		premiumExpiry: {
+			type: Date,
+		},
 	},
 	{ timestamps: true }
 );

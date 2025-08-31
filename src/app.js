@@ -3,8 +3,8 @@ const connectDB = require("./config/database");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const dotenv = require("dotenv");
+
 require("./utils/cronJob");
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 dotenv.config();
 const app = express();
@@ -15,13 +15,16 @@ app.use(
 		credentials: true,
 	})
 );
-app.use(express.json()); // Middleware to parse JSON request bodies
-app.use(cookieParser()); // Middleware to parse cookies
-
 const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");
 const requestRouter = require("./routes/request");
 const userRouter = require("./routes/userRouter");
+const paymentRouter = require("./routes/payment");
+app.use("/", paymentRouter);
+
+app.use(express.json()); // Middleware to parse JSON request bodies
+app.use(cookieParser()); // Middleware to parse cookies
+
 app.use("/", authRouter);
 app.use("/", profileRouter);
 app.use("/", requestRouter);
