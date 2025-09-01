@@ -3,6 +3,8 @@ const connectDB = require("./config/database");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const dotenv = require("dotenv");
+const http = require("http");
+const initiateSocket = require("./utils/socket");
 
 require("./utils/cronJob");
 
@@ -15,11 +17,14 @@ app.use(
 		credentials: true,
 	})
 );
+
 const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");
 const requestRouter = require("./routes/request");
 const userRouter = require("./routes/userRouter");
 const paymentRouter = require("./routes/payment");
+const chatRouter = require("./routes/chat");
+
 app.use("/", paymentRouter);
 
 app.use(express.json()); // Middleware to parse JSON request bodies
@@ -29,11 +34,15 @@ app.use("/", authRouter);
 app.use("/", profileRouter);
 app.use("/", requestRouter);
 app.use("/", userRouter);
+app.use("/", chatRouter);
+
+const server = http.createServer(app);
+initiateSocket(server);
 
 connectDB()
 	.then(() => {
 		console.log("Database connection established");
-		app.listen(process.env.PORT, () => {
+		server.listen(process.env.PORT, () => {
 			console.log("Server is running on port 3000");
 		});
 	})

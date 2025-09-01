@@ -79,7 +79,6 @@ paymentRouter.post(
 				sig,
 				process.env.STRIPE_WEBHOOK_SECRET
 			);
-			console.log(event);
 
 			// Handle the event
 			switch (event.type) {
